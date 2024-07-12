@@ -31,15 +31,25 @@ mockterm_window_properties_t window_prop = {
     .height = MOCKTERM_WINDOW_ROWS * MOCKTERM_WINDOW_ROW_SIZE,
 };
 
-int 
-main(int argc, char** argv)
+int
+mk_init()
 {
     mockterm_display_t* display = mk_display_init();
 
-    printf("font name: %s\n", MOCKTERM_FONT_NAME);
-    mk_font_find_path(MOCKTERM_FONT_NAME);
+    mk_font_open(display, mk_font_find_path(MOCKTERM_FONT_NAME));
 
     mk_display_create_window(display, window_prop);
     mk_display_attach_colors(display);
     mk_display_run(display);
+
+    return EXIT_SUCCESS;
+}
+
+int 
+main(int argc, char** argv)
+{
+    MK_USE(argc);
+    MK_USE(argv);
+
+    return mk_init();
 }

@@ -23,7 +23,6 @@
 #include <mk_core.h>
 
 /* SDL2 Includes */
-#include <SDL2/SDL_thread.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL.h>

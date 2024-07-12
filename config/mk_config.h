@@ -66,6 +66,6 @@
  *  - "/usr/share/fonts", 
  *  - "/usr/local/share/fonts", 
  */
-#define MOCKTERM_FONT_NAME "Terminus"
+#define MOCKTERM_FONT_NAME "FiraCode"
 
 #endif /* MOCKTERM_CONFIG */

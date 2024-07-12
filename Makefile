@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -g -Wall -Wextra -std=c99 -I./include -I./config
-LDFLAGS = -g -lSDL2 -lSDL2_ttf
+CFLAGS = -g -std=c2x -I./include -I./config $(shell pkg-config sdl2 sdl2_ttf --cflags)
+LDFLAGS = -g $(shell pkg-config sdl2 sdl2_ttf --libs)
 
 SRC_DIR = ./src
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c) 

@@ -30,4 +30,6 @@
 #include <ctype.h>
 #include <time.h>
 
+#define MK_USE(x) ((void)x)
+
 #endif /* MOCKTERM_CORE_h */

@@ -23,8 +23,46 @@
 #include <mk_config.h>
 #include <mk_msg.h>
 
-const char*
-mk_font_find_path(const char* font_name)
-{
+const char* search_font_in_directory(const char* directory, const char* font_name) {
+    struct dirent *entry;
+    DIR *dp = opendir(directory);
 
+    if (dp == NULL) {
+        return NULL;
+    }
+
+    while ((entry = readdir(dp))) {
+        if (entry->d_type == DT_REG || entry->d_type == DT_LNK) { // Regular file or symlink
+            if (strstr(entry->d_name, font_name) && strstr(entry->d_name, ".ttf")) {
+                static char font_path[1024];
+                snprintf(font_path, sizeof(font_path), "%s/%s", directory, entry->d_name);
+                closedir(dp);
+                return font_path;
+            }
+        }
+    }
+
+    closedir(dp);
+    return NULL;
+}
+
+// Main function to find the font path
+const char* mk_font_find_path(const char* font_name) {
+    const char* font_directories[] = {
+        "/usr/share/fonts",
+        "/usr/local/share/fonts",
+        "~/.fonts",
+        "/Users/bruno/System/Library/Fonts",
+        "/Users/bruno/Library/Fonts",
+        NULL
+    };
+
+    for (int i = 0; font_directories[i] != NULL; ++i) {
+        const char* path = search_font_in_directory(font_directories[i], font_name);
+        if (path != NULL) {
+            return path;
+        }
+    }
+
+    return NULL;
 }
