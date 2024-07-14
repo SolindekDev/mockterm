@@ -20,6 +20,10 @@
 #ifndef MOCKTERM_FONT_h
 #define MOCKTERM_FONT_h
 
+#include <mk_display.h>
+
 const char* mk_font_find_path(const char* font_name);
+
+void mk_font_open(mockterm_display_t* display, char* font_path);
 
 #endif /* MOCKTERM_FONT_h */

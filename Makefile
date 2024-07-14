@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -g -std=c2x -I./include -I./config $(shell pkg-config sdl2 sdl2_ttf --cflags)
-LDFLAGS = -g $(shell pkg-config sdl2 sdl2_ttf --libs)
+CFLAGS = -g3 -O0 -std=c2x -I./include -I./config $(shell pkg-config sdl2 sdl2_ttf --cflags)
+LDFLAGS = -g3 -O0 $(shell pkg-config sdl2 sdl2_ttf --libs)
 
 SRC_DIR = ./src
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c) 

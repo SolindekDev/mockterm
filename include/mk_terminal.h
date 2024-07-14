@@ -17,39 +17,25 @@
  *
  */
 
+#ifndef MOCKTERM_TERMINAL_h
+#define MOCKTERM_TERMINAL_h
+
 #include <mk_core.h>
-#include <mk_main.h>
-
-#include <mk_config.h>
-#include <mk_input.h>
 #include <mk_display.h>
-#include <mk_font.h>
 
-mockterm_window_properties_t window_prop = {
-    .title  = MOCKTERM_WINDOW_TITLE,
-    .width  = MOCKTERM_WINDOW_COLUMNS * MOCKTERM_WINDOW_COLUMN_SIZE,
-    .height = MOCKTERM_WINDOW_ROWS    * MOCKTERM_WINDOW_ROW_SIZE,
-};
+typedef struct __mockterm_terminal_t {
+    fd_set                  read_fds;
+    struct timeval          timeout;
 
-int
-mk_init()
-{
-    mockterm_display_t* display = mk_display_init();
+    int                     master_fd;
+    pid_t                   pid;
+} mockterm_terminal_t;
 
-    mk_font_open(display, mk_font_find_path(MOCKTERM_FONT_NAME));
+typedef struct __mockterm_display_t mockterm_display_t;
 
-    mk_display_create_window(display, window_prop);
-    mk_display_attach_colors(display);
-    mk_display_run(display);
+mockterm_terminal_t* mk_create_terminal();
 
-    return EXIT_SUCCESS;
-}
+void mk_create_pseudo_terminal(mockterm_terminal_t* terminal);
+bool mk_terminal_check_fd(mockterm_display_t* display, mockterm_terminal_t* terminal);
 
-int 
-main(int argc, char** argv)
-{
-    MK_USE(argc);
-    MK_USE(argv);
-
-    return mk_init();
-}
+#endif /* MOCKTERM_TERMINAL_h */

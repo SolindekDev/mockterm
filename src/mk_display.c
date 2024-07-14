@@ -20,9 +20,12 @@
 #include <mk_core.h>
 #include <mk_display.h>
 
+#include <mk_terminal.h>
 #include <mk_config.h>
 #include <mk_input.h>
 #include <mk_msg.h>
+
+#include <util.h>
 
 void
 mk_display_init_libraries()
@@ -93,7 +96,45 @@ mk_display_attach_colors(mockterm_display_t* display)
 void
 mk_display_render(mockterm_display_t* display)
 {
+    SDL_Color fg_color = { 
+        (display->win_colors->foreground >> 24) & 0xFF, 
+        (display->win_colors->foreground >> 16) & 0xFF,
+        (display->win_colors->foreground >> 8 ) & 0xFF,  
+        (display->win_colors->foreground      ) & 0xFF
+    };
 
+    int x_offset = 0;
+    int y_offset = 0;
+
+    for (int i = 0; i < strlen(display->buffer); i++)
+    {
+        if (display->buffer[i] == '\n')
+        {
+            y_offset += MOCKTERM_WINDOW_COLUMN_SIZE * 1.5;
+            x_offset  = 0;
+            continue;
+        }
+
+        SDL_Surface* glyph_surface = TTF_RenderGlyph_Blended(display->win_font, display->buffer[i], fg_color);
+        // SDL_Surface* glyph_surface = TTF_RenderText_Blended_Wrapped(display->win_font, display->buffer, fg_color, win_w_size - MOCKTERM_WINDOW_MARGIN_RIGHT);
+
+        // if (glyph_surface == NULL)
+        //     MK_ERROR("Couldn't generate '%c' glyph surface.\n", display->buffer[i]);
+
+        // printf("font is being %c buffer_size=%zu input_size=%zu\n", display->buffer[i], display->input_size, display->buffer_size);
+        SDL_Texture* glyph_texture = SDL_CreateTextureFromSurface(display->sdl_renderer, glyph_surface);
+        // printf("displayed\n");
+        
+        int glyph_w, glyph_h = 0;
+        SDL_QueryTexture(glyph_texture, NULL, NULL, &glyph_w, &glyph_h);
+        SDL_Rect dstrect = { 
+            MOCKTERM_WINDOW_MARGIN_LEFT + x_offset, MOCKTERM_WINDOW_MARGIN_TOP + y_offset, glyph_w, glyph_h 
+            // MOCKTERM_WINDOW_MARGIN_LEFT, MOCKTERM_WINDOW_MARGIN_TOP, glyph_w, glyph_h 
+        };
+
+        x_offset += MOCKTERM_WINDOW_COLUMN_SIZE - 4;
+        SDL_RenderCopy(display->sdl_renderer, glyph_texture, NULL, &dstrect);
+    }
 }
 
 void
@@ -121,13 +162,25 @@ mk_display_fps(mockterm_display_t* display)
 void 
 mk_display_run(mockterm_display_t* display)
 {
+    display->terminal = mk_create_terminal();
+    mk_create_pseudo_terminal(display->terminal);
+    
+    display->buffer = calloc(sizeof(char), 512);
+    display->input  = calloc(sizeof(char), 512);
+
     while (!display->win_loop)
     {
-        if (display->win_frames % 5 == 0)
+        FD_ZERO(&display->terminal->read_fds);
+        FD_SET(display->terminal->master_fd, &display->terminal->read_fds);
+        display->terminal->timeout.tv_sec  = 0;
+        display->terminal->timeout.tv_usec = 10;
+
+        bool change_1 = mk_events_input(display);
+        bool change_2 = mk_terminal_check_fd(display, display->terminal);
+
+        if (change_1 == true || change_2 == true)
         {
             mk_display_clear(display);
-            mk_events_input(display);
-
             mk_display_render(display);
             mk_display_swap_buffer(display);
         }

@@ -28,6 +28,7 @@
 #include <SDL2/SDL.h>
 
 #include <mk_term_colors.h>
+#include <mk_terminal.h>
 
 typedef struct __mockterm_window_properties_t mockterm_window_properties_t;
 
@@ -35,12 +36,20 @@ typedef struct __mockterm_display_t {
     SDL_Window*                   sdl_window;
     SDL_Renderer*                 sdl_renderer;
 
+    mockterm_terminal_t*          terminal;
     mockterm_window_properties_t* win_prop;
     mockterm_window_colors_t*     win_colors;
     bool                          win_loop;
     unsigned long                 win_frames;
     unsigned long                 win_fps;
     clock_t                       win_last_tick; 
+    TTF_Font*                     win_font;
+    
+    char*                         buffer;         
+    char*                         input;
+    size_t                        buffer_size;   
+    size_t                        data_length;
+    size_t                        input_size;
 } mockterm_display_t;
 
 typedef struct __mockterm_window_properties_t {

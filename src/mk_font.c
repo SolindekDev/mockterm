@@ -23,17 +23,21 @@
 #include <mk_config.h>
 #include <mk_msg.h>
 
+#include <SDL2/SDL_ttf.h>
+
 const char* search_font_in_directory(const char* directory, const char* font_name) {
-    struct dirent *entry;
     DIR *dp = opendir(directory);
 
-    if (dp == NULL) {
+    if (dp == NULL) 
         return NULL;
-    }
 
-    while ((entry = readdir(dp))) {
-        if (entry->d_type == DT_REG || entry->d_type == DT_LNK) { // Regular file or symlink
-            if (strstr(entry->d_name, font_name) && strstr(entry->d_name, ".ttf")) {
+    struct dirent* entry;
+    while ((entry = readdir(dp))) 
+    {
+        if (entry->d_type == DT_REG || entry->d_type == DT_LNK) 
+        {
+            if (strstr(entry->d_name, font_name) && strstr(entry->d_name, ".ttf")) 
+            {
                 static char font_path[1024];
                 snprintf(font_path, sizeof(font_path), "%s/%s", directory, entry->d_name);
                 closedir(dp);
@@ -57,12 +61,24 @@ const char* mk_font_find_path(const char* font_name) {
         NULL
     };
 
-    for (int i = 0; font_directories[i] != NULL; ++i) {
+    for (int i = 0; font_directories[i] != NULL; ++i) 
+    {
         const char* path = search_font_in_directory(font_directories[i], font_name);
-        if (path != NULL) {
+        if (path != NULL) 
             return path;
-        }
     }
 
     return NULL;
+}
+
+void
+mk_font_open(mockterm_display_t* display, char* font_path)
+{
+    TTF_Font* font = TTF_OpenFont(font_path, MOCKTERM_WINDOW_COLUMN_SIZE + 2);
+    
+    if (font == NULL)
+        MK_ERROR("couldn't open a font from '%s'\n", font_path);
+
+    display->win_font = font;
+    MK_DEBUG("succesfully open a font from '%s'\n", font_path);
 }

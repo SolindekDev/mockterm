@@ -28,16 +28,16 @@
 
 #define MOCKTERM_WINDOW_TITLE "Mockterm"
 
-#define MOCKTERM_WINDOW_COLUMNS (80)
-#define MOCKTERM_WINDOW_ROWS    (48)
+#define MOCKTERM_WINDOW_COLUMNS (60)
+#define MOCKTERM_WINDOW_ROWS    (38)
 
 #define MOCKTERM_WINDOW_COLUMN_SIZE 16
 #define MOCKTERM_WINDOW_ROW_SIZE    16
 
-#define MOCKTERM_WINDOW_MARGIN_LEFT   12
-#define MOCKTERM_WINDOW_MARGIN_RIGHT  12
-#define MOCKTERM_WINDOW_MARGIN_TOP    12
-#define MOCKTERM_WINDOW_MARGIN_BOTTOM 12
+#define MOCKTERM_WINDOW_MARGIN_LEFT   2
+#define MOCKTERM_WINDOW_MARGIN_RIGHT  2
+#define MOCKTERM_WINDOW_MARGIN_TOP    2
+#define MOCKTERM_WINDOW_MARGIN_BOTTOM 2
 
 
 /* ===============================
@@ -45,8 +45,10 @@
  * ===============================
  */
 
-#define MOCKTERM_COLORS_BACKGROUND 0x1A1D23FF
-#define MOCKTERM_COLORS_FOREGROUND 0x9B9FA9FF
+// #define MOCKTERM_COLORS_BACKGROUND 0x1A1D23FF
+// #define MOCKTERM_COLORS_FOREGROUND 0x9B9FA9FF
+#define MOCKTERM_COLORS_BACKGROUND 0x050505FF
+#define MOCKTERM_COLORS_FOREGROUND 0xF8F8F8FF
 
 #define MOCKTERM_COLORS_BLACK   0x111317FF
 #define MOCKTERM_COLORS_RED     0xF8747EFF
@@ -67,5 +69,12 @@
  *  - "/usr/local/share/fonts", 
  */
 #define MOCKTERM_FONT_NAME "FiraCode"
+
+/* ===============================
+ *  MOCKTERM - Default shell executable
+ * ===============================
+ */
+
+#define MOCKTERM_DEFAULT_SHELL "/bin/bash"
 
 #endif /* MOCKTERM_CONFIG */

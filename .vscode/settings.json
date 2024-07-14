@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "*.ejs": "html",
+        "*.asm": "barn",
+        "mk_core.h": "c",
+        "fcntl.h": "c",
+        "util.h": "c",
+        "mk_display.h": "c",
+        "mk_config.h": "c",
+        "mk_term_colors.h": "c",
+        "mk_msg.h": "c",
+        "mk_input.h": "c",
+        "ios": "c"
+    }
+}

@@ -23,6 +23,6 @@
 #include <mk_core.h>
 #include <mk_display.h>
 
-void mk_events_input(mockterm_display_t* display);
+bool mk_events_input(mockterm_display_t* display);
 
 #endif /* MOCKTERM_INPUT_h */

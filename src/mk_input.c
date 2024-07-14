@@ -22,9 +22,29 @@
 #include <mk_display.h>
 
 void
+mk_input_key_codes(mockterm_display_t* display, SDL_Event event)
+{
+    unsigned int keysym = event.key.keysym.sym;
+
+// Key::Named(NamedKey::Tab) => [b'\t'].as_slice().into(),
+//             Key::Named(NamedKey::Enter) => [b'\r'].as_slice().into(),
+//             Key::Named(NamedKey::Backspace) => [b'\x7f'].as_slice().into(),
+//             Key::Named(NamedKey::Escape) => [b'\x1b'].as_slice().into(),
+
+    if      (keysym == SDLK_BACKSPACE)
+        write(display->terminal->master_fd, "\x7f", 1); 
+    else if (keysym == SDLK_RETURN) 
+        write(display->terminal->master_fd, "\n", 1);
+    if      (keysym == SDLK_TAB)
+        write(display->terminal->master_fd, "\t", 1); 
+    else if (keysym == SDLK_ESCAPE) 
+        write(display->terminal->master_fd, "\x1b", 1);
+}
+
+bool
 mk_events_input(mockterm_display_t* display)
 {
-    SDL_Event event;
+    SDL_Event event; 
  
     while (SDL_PollEvent(&event)) 
     {
@@ -32,9 +52,21 @@ mk_events_input(mockterm_display_t* display)
         {
             case SDL_QUIT:
                 display->win_loop = true;
+                return false;
                 break;
+            case SDL_TEXTINPUT:
+                // display->input_size += 1;
+                // display->input = realloc(display->input, display->input_size + 2);
+                strcat(display->input, event.text.text);
+                write(display->terminal->master_fd, event.text.text, strlen(event.text.text));
+                return true;
+            case SDL_KEYDOWN:
+                mk_input_key_codes(display, event);
+                return true;
             default:
                 break;
         }
     }
+
+    return false;
 }
