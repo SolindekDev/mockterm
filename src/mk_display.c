@@ -27,6 +27,8 @@
 
 #include <util.h>
 
+int glyph_w, glyph_h;
+
 void
 mk_display_init_libraries()
 {
@@ -58,7 +60,7 @@ mk_display_create_window(mockterm_display_t* display,
     display->sdl_window   = SDL_CreateWindow(properties.title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
                                              properties.width  + MOCKTERM_WINDOW_MARGIN_LEFT + MOCKTERM_WINDOW_MARGIN_RIGHT, 
                                              properties.height + MOCKTERM_WINDOW_MARGIN_TOP  + MOCKTERM_WINDOW_MARGIN_BOTTOM, 0x00);
-    display->sdl_renderer = SDL_CreateRenderer(display->sdl_window, -1, 0);
+    display->sdl_renderer = SDL_CreateRenderer(display->sdl_window, -1, SDL_RENDERER_ACCELERATED);
 
     display->win_loop   = false;
     display->win_frames = 0;
@@ -94,7 +96,36 @@ mk_display_attach_colors(mockterm_display_t* display)
 }
 
 void
-mk_display_render(mockterm_display_t* display)
+mk_display_render_cursor(mockterm_display_t* display, int character_width, int character_height)
+{
+
+}
+
+void
+mk_display_resize_term_texture(mockterm_display_t* display, int offset_y)
+{
+    int old_width, old_height = 0;
+    SDL_QueryTexture(display->term_texture, NULL, NULL, &old_width, &old_height);
+
+    int new_width  = old_width;
+    int new_height = offset_y; 
+
+    SDL_Texture* resized_texture = SDL_CreateTexture(
+        display->sdl_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, new_width, new_height);
+
+    SDL_SetRenderTarget(display->sdl_renderer, resized_texture);
+    SDL_Rect dstrect = { 0, 0, old_width, old_height };
+    SDL_RenderCopy(display->sdl_renderer, display->term_texture, NULL, &dstrect);
+
+    SDL_SetRenderTarget(display->sdl_renderer, NULL);
+    SDL_RenderCopy(display->sdl_renderer, resized_texture, NULL, &dstrect);
+
+    SDL_DestroyTexture(display->term_texture);
+    display->term_texture = resized_texture;
+}
+
+bool
+mk_display_render_on_texture(mockterm_display_t* display)
 {
     SDL_Color fg_color = { 
         (display->win_colors->foreground >> 24) & 0xFF, 
@@ -103,38 +134,91 @@ mk_display_render(mockterm_display_t* display)
         (display->win_colors->foreground      ) & 0xFF
     };
 
+    bool was_offseted = false;
+
     int x_offset = 0;
     int y_offset = 0;
 
-    for (int i = 0; i < strlen(display->buffer); i++)
+    int window_height;
+    SDL_GetWindowSize(display->sdl_window, NULL, &window_height);
+
+    int term_texture_h = 0;
+
+    int start_buffer = 0;
+    if (display->buffer_size > 1536)
+        start_buffer = display->buffer_size - 1536;
+
+    for (int i = start_buffer; i < display->buffer_size; i++)
     {
+        SDL_QueryTexture(display->term_texture, NULL, NULL, NULL, &term_texture_h);
+
         if (display->buffer[i] == '\n')
         {
             y_offset += MOCKTERM_WINDOW_COLUMN_SIZE * 1.5;
+
+            if (y_offset > term_texture_h)
+            {
+                y_offset += MOCKTERM_WINDOW_COLUMN_SIZE * 2;
+                mk_display_resize_term_texture(display, y_offset);
+                was_offseted = true;
+            }
+
             x_offset  = 0;
             continue;
         }
 
+        if (y_offset < (term_texture_h - window_height))
+        {
+            continue;
+        }
+
         SDL_Surface* glyph_surface = TTF_RenderGlyph_Blended(display->win_font, display->buffer[i], fg_color);
-        // SDL_Surface* glyph_surface = TTF_RenderText_Blended_Wrapped(display->win_font, display->buffer, fg_color, win_w_size - MOCKTERM_WINDOW_MARGIN_RIGHT);
-
-        // if (glyph_surface == NULL)
-        //     MK_ERROR("Couldn't generate '%c' glyph surface.\n", display->buffer[i]);
-
-        // printf("font is being %c buffer_size=%zu input_size=%zu\n", display->buffer[i], display->input_size, display->buffer_size);
         SDL_Texture* glyph_texture = SDL_CreateTextureFromSurface(display->sdl_renderer, glyph_surface);
-        // printf("displayed\n");
         
-        int glyph_w, glyph_h = 0;
         SDL_QueryTexture(glyph_texture, NULL, NULL, &glyph_w, &glyph_h);
         SDL_Rect dstrect = { 
             MOCKTERM_WINDOW_MARGIN_LEFT + x_offset, MOCKTERM_WINDOW_MARGIN_TOP + y_offset, glyph_w, glyph_h 
-            // MOCKTERM_WINDOW_MARGIN_LEFT, MOCKTERM_WINDOW_MARGIN_TOP, glyph_w, glyph_h 
         };
 
         x_offset += MOCKTERM_WINDOW_COLUMN_SIZE - 4;
+
+        SDL_SetRenderTarget(display->sdl_renderer, display->term_texture);
         SDL_RenderCopy(display->sdl_renderer, glyph_texture, NULL, &dstrect);
+        SDL_SetRenderTarget(display->sdl_renderer, NULL);
     }
+
+    return was_offseted;
+}
+
+void
+mk_display_reset_term_texture(mockterm_display_t* display)
+{
+    int tex_format, tex_access, tex_w, tex_h;
+    SDL_QueryTexture(display->term_texture, &tex_format, &tex_access, &tex_w, &tex_h);
+    display->term_texture = SDL_CreateTexture(display->sdl_renderer, tex_format, tex_access, tex_w, tex_h);
+}
+
+void
+mk_display_render(mockterm_display_t* display)
+{
+    bool was_offseted = mk_display_render_on_texture(display);
+
+    if (was_offseted)
+    {
+        // Rerender it casue some text is not rendering properly after
+        // offseting y
+        mk_display_reset_term_texture(display);
+        mk_display_render_on_texture(display);
+    }
+
+    int texture_width, texture_height, window_height;
+    SDL_QueryTexture(display->term_texture, NULL, NULL, &texture_width, &texture_height);
+    SDL_GetWindowSize(display->sdl_window, NULL, &window_height);
+
+    SDL_Rect dstrect = { 0, (window_height - texture_height), texture_width, texture_height };
+    SDL_RenderCopy(display->sdl_renderer, display->term_texture, NULL, &dstrect);
+    mk_display_reset_term_texture(display);
+    // mk_display_render_cursor(display);
 }
 
 void
@@ -157,6 +241,8 @@ mk_display_fps(mockterm_display_t* display)
 
         MK_DEBUG("fps: %lu", display->win_fps);
     }
+
+    SDL_Delay(1000 / 144);
 }
 
 void 
@@ -167,6 +253,12 @@ mk_display_run(mockterm_display_t* display)
     
     display->buffer = calloc(sizeof(char), 512);
     display->input  = calloc(sizeof(char), 512);
+
+    int window_w, window_h;
+    SDL_GetWindowSize(display->sdl_window, &window_w, &window_h);
+
+    display->term_texture = SDL_CreateTexture(
+        display->sdl_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, window_w, window_h);
 
     while (!display->win_loop)
     {
@@ -183,6 +275,11 @@ mk_display_run(mockterm_display_t* display)
             mk_display_clear(display);
             mk_display_render(display);
             mk_display_swap_buffer(display);
+
+            // if (display->buffer_size > 1024)
+            // {
+            //     display->buffer
+            // }
         }
 
         mk_display_fps(display);

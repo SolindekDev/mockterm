@@ -84,7 +84,7 @@ bool mk_terminal_check_fd(mockterm_display_t *display, mockterm_terminal_t *term
                 temp_buffer[nread] = '\0';
 
                 // Calculate the new buffer size needed
-                size_t new_data_length = display->data_length + nread;
+                size_t new_data_length = display->buffer_size + nread;
                 display->buffer = realloc(display->buffer, new_data_length + 1);
                 if (display->buffer == NULL) {
                     // Handle allocation failure
@@ -93,8 +93,8 @@ bool mk_terminal_check_fd(mockterm_display_t *display, mockterm_terminal_t *term
                 }
 
                 // Copy the new data to the end of the buffer
-                memcpy(display->buffer + display->data_length, temp_buffer, nread + 1);
-                display->data_length = new_data_length;
+                memcpy(display->buffer + display->buffer_size, temp_buffer, nread + 1);
+                display->buffer_size = new_data_length;
                 return true;
             }
         }

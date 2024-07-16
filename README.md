@@ -6,7 +6,8 @@ Mockterm is a **simple and lightweight** terminal emulator written in **C**. Cre
 - [x] Window loop
 - [x] Communication with pseudo-terminal
 - [x] Basic input
-- [ ] Better rendering and auto scrolling
+- [x] Better rendering and auto scrolling
+    - [ ] scrolling still needs some help
 - [ ] ANSI Codes
 - [ ] Scrolling
 - [ ] Selecting text

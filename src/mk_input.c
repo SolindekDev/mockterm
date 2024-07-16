@@ -21,24 +21,31 @@
 #include <mk_input.h>
 #include <mk_display.h>
 
-void
+bool
 mk_input_key_codes(mockterm_display_t* display, SDL_Event event)
 {
     unsigned int keysym = event.key.keysym.sym;
 
-// Key::Named(NamedKey::Tab) => [b'\t'].as_slice().into(),
-//             Key::Named(NamedKey::Enter) => [b'\r'].as_slice().into(),
-//             Key::Named(NamedKey::Backspace) => [b'\x7f'].as_slice().into(),
-//             Key::Named(NamedKey::Escape) => [b'\x1b'].as_slice().into(),
-
-    if      (keysym == SDLK_BACKSPACE)
+    if (keysym == SDLK_BACKSPACE)
+    {
         write(display->terminal->master_fd, "\x7f", 1); 
+        return true;
+    }
     else if (keysym == SDLK_RETURN) 
+    {
         write(display->terminal->master_fd, "\n", 1);
-    if      (keysym == SDLK_TAB)
+        return true;
+    }
+    else if (keysym == SDLK_TAB)
+    {
         write(display->terminal->master_fd, "\t", 1); 
+        return true;
+    }
     else if (keysym == SDLK_ESCAPE) 
+    {
         write(display->terminal->master_fd, "\x1b", 1);
+        return true;
+    }
 }
 
 bool
@@ -61,8 +68,7 @@ mk_events_input(mockterm_display_t* display)
                 write(display->terminal->master_fd, event.text.text, strlen(event.text.text));
                 return true;
             case SDL_KEYDOWN:
-                mk_input_key_codes(display, event);
-                return true;
+                return mk_input_key_codes(display, event);;
             default:
                 break;
         }

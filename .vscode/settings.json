@@ -10,6 +10,7 @@
         "mk_term_colors.h": "c",
         "mk_msg.h": "c",
         "mk_input.h": "c",
-        "ios": "c"
+        "ios": "c",
+        "vector": "c"
     }
 }

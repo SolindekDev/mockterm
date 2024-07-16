@@ -48,8 +48,8 @@ typedef struct __mockterm_display_t {
     char*                         buffer;         
     char*                         input;
     size_t                        buffer_size;   
-    size_t                        data_length;
     size_t                        input_size;
+    SDL_Texture*                  term_texture;
 } mockterm_display_t;
 
 typedef struct __mockterm_window_properties_t {
